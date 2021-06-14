@@ -2,9 +2,7 @@ require('dotenv').config(); // load configs from .env
 
 const log = require('signale');
 
-const {
-    Elarian,
-} = require('elarian');
+const { Elarian } = require('elarian');
 
 let client;
 
