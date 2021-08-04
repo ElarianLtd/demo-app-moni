@@ -11,7 +11,7 @@
     "license": "ISC",
     "dependencies": {
         "dotenv": "^8.2.0",
-        "elarian": "^0.2.8",
+        "elarian": "^0.2.9",
         "signale": "^1.4.0"
     }
 }
