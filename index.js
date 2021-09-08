@@ -36,7 +36,7 @@ const approveLoan = async (customer, amount) => {
     }, {
         amount,
         currencyCode: 'KES',
-    }, 'virtual');
+    });
     if (!['success', 'queued', 'pending_confirmation', 'pending_validation'].includes(res.status)) {
         log.error(`Failed to send KES ${amount} to ${customer.customerNumber.number} --> ${res.status}: `, res.description);
         return;
@@ -56,6 +56,7 @@ const approveLoan = async (customer, amount) => {
         key: 'moni',
         remindAt: repaymentDate / 1000,
         payload: '',
+        interval: 60
     });
 };
 
@@ -133,11 +134,6 @@ const processReminder = async (reminder, customer) => {
         await customer.updateMetadata({
             ...customerData,
             strike: strike + 1,
-        });
-        await customer.addReminder({
-            key: 'moni',
-            remindAt: (Date.now() + 60000) / 1000,
-            payload: '',
         });
     } catch (error) {
         log.error('Reminder Error: ', error);

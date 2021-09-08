@@ -10,8 +10,8 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "dotenv": "^8.2.0",
-        "elarian": "^0.2.9",
+        "dotenv": "^10.0.0",
+        "elarian": "^0.2.14",
         "signale": "^1.4.0"
     }
 }
