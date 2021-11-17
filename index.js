@@ -60,9 +60,9 @@ const approveLoan = async (customer, amount) => {
     });
 };
 
-const processPayment = async (payment, customer) => {
+const processPayment = async (notification, customer, appData, callback) => {
     log.info(`Processing payment from ${customer.customerNumber.number}`);
-    const { value: { amount } } = payment;
+    const { value: { amount } } = notification;
     const {
         name,
         balance,
@@ -81,8 +81,9 @@ const processPayment = async (payment, customer) => {
                 },
             },
         );
-        await customer.deleteMetadata(['name', 'strike', 'balance', 'screen']); // clear state
+        await customer.deleteMetadata(['name', 'balance', 'screen']);
         await customer.deleteAppData();
+        callback(null, null);  // clear app state
     } else {
         await customer.sendMessage(
             smsChannel, {
@@ -94,7 +95,7 @@ const processPayment = async (payment, customer) => {
     }
 };
 
-const processReminder = async (reminder, customer) => {
+const processReminder = async (notification, customer, appData, callback) => {
     try {
         const customerData = await customer.getMetadata();
         log.info(`Processing reminder for ${customer.customerNumber.number}`);
@@ -102,9 +103,12 @@ const processReminder = async (reminder, customer) => {
             name,
             balance,
         } = customerData;
-        const {
-            strike = 1,
-        } = customerData;
+        
+        let strike = 1;
+        if (appData && Object.keys(appData).length) {
+            strike = appData.strike;
+        }
+
         if (strike === 1) {
             await customer.sendMessage(smsChannel, {
                 body: {
@@ -131,9 +135,9 @@ const processReminder = async (reminder, customer) => {
                 },
             });
         }
-        await customer.updateMetadata({
-            ...customerData,
-            strike: strike + 1,
+        callback(null, {
+            ...appData,
+            strike: strike + 1
         });
     } catch (error) {
         log.error('Reminder Error: ', error);
@@ -144,9 +148,9 @@ const processUssd = async (notification, customer, appData, callback) => {
     try {
         log.info(`Processing USSD from ${customer.customerNumber.number}`);
         const input = notification.input.text;
-
+        
         let screen = 'home';
-        if (appData) {
+        if (appData && Object.keys(appData).length) {
             screen = appData.screen;
         }
 
@@ -248,8 +252,7 @@ const start = () => {
 
     client
         .on('error', (error) => {
-            log.warn(`${error.message || error} Attempting to reconnect...`);
-            client.connect();
+            log.warn(error.message || error);
         })
         .on('connected', () => {
             log.success(`App is connected, waiting for customers on ${process.env.USSD_CODE}`);
